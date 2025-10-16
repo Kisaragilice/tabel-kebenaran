@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Truth Table — Interaktif (Tugas Akhir)</title>
+  <style>
+    :root{--bg:#071026;--card:#07122a;--glass:rgba(255,255,255,0.03);--accent1:#7c3aed;--accent2:#06b6d4;--muted:#9fb0c8;--radius:14px}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:#e6f2ff;background:linear-gradient(180deg,var(--bg),#021021);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .wrap{width:1150px;max-width:100%;display:grid;grid-template-columns:380px 1fr;gap:20px}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:var(--radius);padding:18px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 10px 30px rgba(2,6,23,0.7)}
+
+    h1{margin:0;font-size:20px}
+    p.lead{color:var(--muted);margin:8px 0 0;font-size:13px}
+
+    label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
+    select,input[type=text]{width:100%;padding:10px;border-radius:10px;border:1px solid var(--glass);background:transparent;color:inherit}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;cursor:pointer;font-weight:600}
+    .btn.alt{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+
+    .presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+    .chip{padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer;border:1px solid rgba(255,255,255,0.02);font-size:13px}
+
+    .small{font-size:13px;color:var(--muted)}
+
+    main{display:flex;flex-direction:column;gap:14px}
+    .card{padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+
+    table{width:100%;border-collapse:collapse;background:transparent;font-family:monospace}
+    th,td{padding:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.03)}
+    thead th{position:sticky;top:0;background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent);z-index:2}
+    .true{background:linear-gradient(90deg, rgba(6,182,212,0.12), rgba(124,58,237,0.06));color:#dff8ff}
+    .false{opacity:0.75}
+    .row-highlight{outline:2px solid rgba(124,58,237,0.15)}
+
+    .tools{display:flex;gap:8px;flex-wrap:wrap}
+
+    footer{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px}
+
+    @media (max-width:1024px){.wrap{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="panel">
+      <h1>Truth Table — Interaktif</h1>
+      <p class="lead">Tugas Akhir: alat pembuatan tabel kebenaran yang interaktif dan dapat diekspor. Hati-hati mengikuti aturan ekspresi (lihat petunjuk).</p>
+
+      <div style="margin-top:14px">
+        <label>Jumlah variabel</label>
+        <select id="varsCount">
+          <option value="1">1</option>
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Contoh cepat (klik untuk menerapkan)</label>
+        <div class="presets" id="presets">
+          <div class="chip" data-expr="A && B">A AND B</div>
+          <div class="chip" data-expr="A || B">A OR B</div>
+          <div class="chip" data-expr="A !== B">A XOR B (2-var)</div>
+          <div class="chip" data-expr="!A">NOT A</div>
+          <div class="chip" data-expr="!(A && B)">NAND</div>
+          <div class="chip" data-expr="!(A || B)">NOR</div>
+          <div class="chip" data-expr="(!A) || B">A → B (IMPLIES)</div>
+          <div class="chip" data-expr="A === B">A ↔ B (IFF)</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Ekspresi kustom</label>
+        <input id="exprInput" placeholder="Contoh: (A && B) || !C  — gunakan A,B,C,D dan operator &&,||,!,===,!==" />
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="applyBtn" class="btn">Terapkan &amp; Buat Tabel</button>
+          <button id="resetBtn" class="btn alt">Reset</button>
+        </div>
+        <div style="margin-top:8px" class="small">Catatan: Hanya huruf A–D yang diperbolehkan sebagai variabel. Operator yang didukung: <code>&amp;&amp;</code>, <code>||</code>, <code>!</code>, <code>===</code>, <code>!==</code>. Untuk XOR dua variabel gunakan <code>A !== B</code>. Implikasi gunakan <code>(!A) || B</code>.</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Opsi tampilan</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <input type="checkbox" id="showTF" /> <label for="showTF" style="margin:0">Tampilkan T/F (bukan 1/0)</label>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Ekspor / Salin</label>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="csvBtn" class="btn alt">Download CSV</button>
+          <button id="copyBtn" class="btn alt">Salin ke Clipboard</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Status</label>
+        <div id="status" class="small">Siap — masukkan ekspresi dan klik "Terapkan &amp; Buat Tabel"</div>
+      </div>
+
+      <footer style="margin-top:14px">Agam • Alat Tabel Kebenaran</footer>
+    </aside>
+
+    <main>
+      <div class="panel card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2 style="margin:0">Tabel Kebenaran</h2>
+            <div class="small" id="exprShow">Ekspresi: <code id="exprText">A && B</code></div>
+          </div>
+          <div class="tools">
+            <label class="small" style="margin:0">Klik baris untuk menyalin nilai baris</label>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;overflow:auto;max-height:560px">
+          <table id="truthTable">
+            <thead id="thead"></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel card">
+        <h3 style="margin:0">Petunjuk & Latihan</h3>
+        <ol style="margin-top:8px;color:var(--muted)">
+          <li>Tulis ekspresi menggunakan variabel A,B,C,D. Contoh: (A && B) || C</li>
+          <li>Gunakan <code>(!A) || B</code> untuk implikasi, dan <code>A === B</code> untuk biimplikasi.</li>
+          <li>Jika ekspresi tidak valid, sistem akan menolak dan menampilkan kesalahan di status.</li>
+        </ol>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ====== Helper & State ======
+    const varsCountEl = document.getElementById('varsCount');
+    const applyBtn = document.getElementById('applyBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const exprInput = document.getElementById('exprInput');
+    const exprText = document.getElementById('exprText');
+    const thead = document.getElementById('thead');
+    const tbody = document.getElementById('tbody');
+    const status = document.getElementById('status');
+    const presets = document.getElementById('presets');
+    const csvBtn = document.getElementById('csvBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const showTF = document.getElementById('showTF');
+
+    let expr = 'A && B';
+
+    // Allowed tokens: A,B,C,D, parentheses, spaces, and operators: &&, ||, !, ===, !==
+    const allowedPattern = /^[\sA-D()!&|=<>]+$/;
+
+    function variables(n){ const base = ['A','B','C','D']; return base.slice(0,n); }
+
+    function sanitizeExpression(raw){
+      // remove unicode invisible chars
+      const s = raw.replace(/[^\x00-\x7F]/g,'');
+      // quick check: only allowed characters
+      if(!allowedPattern.test(s)) throw new Error('Ekspresi mengandung karakter tidak diijinkan. Gunakan hanya A-D, spasi, (), dan operator &&, ||, !, ===, !==.');
+      // normalize multiple spaces
+      return s.replace(/\s+/g,' ').trim();
+    }
+
+    function buildHeader(vars){
+      thead.innerHTML = '';
+      const tr = document.createElement('tr');
+      vars.forEach(v=>{const th=document.createElement('th'); th.textContent=v; tr.appendChild(th)});
+      const th = document.createElement('th'); th.textContent='Result'; tr.appendChild(th);
+      thead.appendChild(tr);
+    }
+
+    // Evaluate a single row. We create a function with A,B,C,D constants defined locally.
+    function evalRow(vars, values, expr){
+      // map variables to boolean literals
+      const mapping = {};
+      vars.forEach((v,i)=> mapping[v] = values[i]);
+
+      // ensure expr only uses allowed variable letters and operators
+      const transformed = expr
+        .replace(/\bA\b/g, mapping['A']===undefined ? 'false' : (mapping['A'] ? 'true' : 'false'))
+        .replace(/\bB\b/g, mapping['B']===undefined ? 'false' : (mapping['B'] ? 'true' : 'false'))
+        .replace(/\bC\b/g, mapping['C']===undefined ? 'false' : (mapping['C'] ? 'true' : 'false'))
+        .replace(/\bD\b/g, mapping['D']===undefined ? 'false' : (mapping['D'] ? 'true' : 'false'));
+
+      // final safety check: transformed must contain only true/false, spaces, parentheses and operators
+      if(!/^[\struefalseraparens!&|=<>().]+$/.test(transformed) && !/^[\struefalseraparens!&|=<>().]+$/.test(transformed)){
+        // the regex above is intentionally permissive but we still guard by try/catch
+      }
+
+      try{
+        // Use Function in a very constrained way: no arguments, immediate return
+        const fn = new Function('return (' + transformed + ');');
+        const res = fn();
+        return !!res;
+      }catch(e){
+        console.error('Eval error', e, transformed);
+        throw new Error('Terjadi kesalahan saat mengevaluasi ekspresi. Pastikan ekspresi valid.');
+      }
+    }
+
+    function generateTable(){
+      try{
+        expr = sanitizeExpression(expr);
+      }catch(e){ status.textContent = e.message; return; }
+
+      const n = parseInt(varsCountEl.value,10);
+      const vars = variables(n);
+      buildHeader(vars);
+      tbody.innerHTML = '';
+      const rows = Math.pow(2,n);
+      for(let i=0;i<rows;i++){
+        const tr = document.createElement('tr');
+        const vals = [];
+        for(let j=0;j<n;j++){
+          const bit = !!(i & (1 << (n-1-j)));
+          vals.push(bit);
+          const td = document.createElement('td'); td.textContent = bit ? (showTF.checked ? 'T' : '1') : (showTF.checked ? 'F' : '0'); tr.appendChild(td);
+        }
+        let res;
+        try{ res = evalRow(vars, vals, expr); }catch(e){ status.textContent = e.message; return; }
+        const td = document.createElement('td'); td.textContent = res ? (showTF.checked ? 'T' : '1') : (showTF.checked ? 'F' : '0');
+        td.className = res ? 'true' : 'false';
+        tr.appendChild(td);
+        // click row handlers
+        tr.addEventListener('click', ()=>{
+          // highlight
+          tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('row-highlight'));
+          tr.classList.add('row-highlight');
+          // copy row values to clipboard
+          const rowVals = vals.map(v=> v? '1':'0').concat(res? '1':'0');
+          navigator.clipboard.writeText(rowVals.join(',')).then(()=>{
+            status.textContent = 'Nilai baris disalin: ' + rowVals.join(',');
+          }).catch(()=>{ status.textContent = 'Gagal menyalin ke clipboard'; });
+        });
+
+        tbody.appendChild(tr);
+      }
+      exprText.textContent = expr || '(kosong)';
+      status.textContent = 'Tabel terbuat: ' + rows + ' baris';
+    }
+
+    // ===== events =====
+    applyBtn.addEventListener('click', ()=>{
+      const raw = exprInput.value.trim();
+      if(!raw){ status.textContent = 'Masukkan ekspresi terlebih dahulu.'; return; }
+      try{
+        // basic validation
+        const s = sanitizeExpression(raw);
+        expr = s;
+        generateTable();
+      }catch(e){ status.textContent = e.message; }
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      expr = 'A && B'; exprInput.value = ''; varsCountEl.value = '2'; showTF.checked = false; generateTable(); status.textContent = 'Di-reset ke default.';
+    });
+
+    presets.querySelectorAll('.chip').forEach(ch=> ch.addEventListener('click', ()=>{
+      const e = ch.dataset.expr; exprInput.value = e; expr = e; generateTable();
+    }));
+
+    csvBtn.addEventListener('click', ()=>{
+      // build CSV from current table
+      const rows = [];
+      const headers = Array.from(thead.querySelectorAll('th')).map(th=>th.textContent);
+      rows.push(headers.join(','));
+      tbody.querySelectorAll('tr').forEach(tr=>{
+        const cells = Array.from(tr.querySelectorAll('td')).map(td=>td.textContent);
+        rows.push(cells.join(','));
+      });
+      const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'truth-table.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      status.textContent = 'CSV diunduh.';
+    });
+
+    copyBtn.addEventListener('click', async ()=>{
+      // copy plain text table
+      let text = '';
+      const headers = Array.from(thead.querySelectorAll('th')).map(th=>th.textContent);
+      text += headers.join('\t') + '\n';
+      tbody.querySelectorAll('tr').forEach(tr=>{
+        const cells = Array.from(tr.querySelectorSelectorAll('td')).map(td=>td.textContent);
+        text += cells.join('\t') + '\n';
+      });
+      try{ await navigator.clipboard.writeText(text); status.textContent = 'Tabel disalin ke clipboard (tab-separated).'; }catch(e){ status.textContent = 'Gagal menyalin ke clipboard.'; }
+    });
+
+    showTF.addEventListener('change', ()=>{ generateTable(); });
+    varsCountEl.addEventListener('change', ()=>{ generateTable(); });
+
+    // initial generate
+    exprInput.value = 'A && B';
+    generateTable();
+  </script>
+</body>
+</html>
